@@ -22,7 +22,7 @@
 #include <drm/drm_mipi_dsi.h>
 #include <drm/drm_panel.h>
 
-#define WS_DSI_DRIVER_NAME "ies-ts-dsi"
+#define WS_DSI_DRIVER_NAME "cus-ts-dsi"
 
 struct ws_panel {
 	struct drm_panel base;
@@ -101,8 +101,8 @@ static const struct ws_panel_data ws_panel_4_0_data = {
 	.mode_flags = MIPI_DSI_MODE_VIDEO_HSE | MIPI_DSI_MODE_VIDEO | MIPI_DSI_CLOCK_NON_CONTINUOUS,
 };
 
-/* 7.0inch C 1024x600
- * https://www.waveshare.com/product/raspberry-pi/displays/lcd-oled/7inch-dsi-lcd-c-with-case-a.htm
+/* 7.0inch C 1280x800
+ * https://www.waveshare.com/wiki/7inch_DSI_LCD_(E)
  */
 static const struct drm_display_mode ws_panel_7_0_c_mode = {
     .clock = 83333,
@@ -461,8 +461,6 @@ static int ws_panel_probe(struct i2c_client *i2c)
 		.node = NULL,
 	};
 
-	dev_err(dev, "ws_panel_probe=====");
-
 	const struct ws_panel_data *_ws_panel_data;
 	int ret;
 
@@ -478,16 +476,6 @@ static int ws_panel_probe(struct i2c_client *i2c)
 	if (!ts->mode)
 		return -EINVAL;
 
-	dev_err(dev,
-		"matched panel: %ux%u clock=%u htotal=%u vtotal=%u lanes=%d flags=0x%lx\n",
-		ts->mode->hdisplay,
-		ts->mode->vdisplay,
-		ts->mode->clock,
-		ts->mode->htotal,
-		ts->mode->vtotal,
-		_ws_panel_data->lanes,
-		_ws_panel_data->mode_flags);
-
 	i2c_set_clientdata(i2c, ts);
 
 	ts->i2c = i2c;
@@ -501,14 +489,11 @@ static int ws_panel_probe(struct i2c_client *i2c)
 		dev_err(dev, "%pOF: failed to get orientation %d\n", dev->of_node, ret);
 		return ret;
 	}
-	dev_err(dev, "panel orientation = %d\n", ts->orientation);
 
 	/* Look up the DSI host.  It needs to probe before we do. */
 	endpoint = of_graph_get_next_endpoint(dev->of_node, NULL);
 	if (!endpoint)
-		return -ENODEV;
-
-	dev_err(dev, "endpoint found: %pOF\n", endpoint);		
+		return -ENODEV;	
 
 	dsi_host_node = of_graph_get_remote_port_parent(endpoint);
 	if (!dsi_host_node)
@@ -557,8 +542,7 @@ static int ws_panel_probe(struct i2c_client *i2c)
 
 	if (ret)
 		dev_err(dev, "failed to attach dsi to host: %d\n", ret);
-
-	dev_err(dev, "=== ws_panel_probe: SUCCESS ===\n");		
+	
 	return 0;
 
 error:
@@ -584,49 +568,49 @@ static void ws_panel_shutdown(struct i2c_client *i2c)
 
 static const struct of_device_id ws_panel_of_ids[] = {
 	{
-		.compatible = "ies,2.8inch-panel",
+		.compatible = "cus,2.8inch-panel",
 		.data = &ws_panel_2_8_data,
 	}, {
-		.compatible = "ies,3.4inch-panel",
+		.compatible = "cus,3.4inch-panel",
 		.data = &ws_panel_3_4_data,
 	}, {
-		.compatible = "ies,4.0inch-panel",
+		.compatible = "cus,4.0inch-panel",
 		.data = &ws_panel_4_0_data,
 	}, {
-		.compatible = "ies,7.0inch-c-panel",
+		.compatible = "cus,7.0inch-c-panel",
 		.data = &ws_panel_7_0_c_data,
 	}, {
-		.compatible = "ies,7.9inch-panel",
+		.compatible = "cus,7.9inch-panel",
 		.data = &ws_panel_7_9_data,
 	}, {
-		.compatible = "ies,8.0inch-panel",
+		.compatible = "cus,8.0inch-panel",
 		.data = &ws_panel_10_1_data,
 	}, {
-		.compatible = "ies,10.1inch-panel",
+		.compatible = "cus,10.1inch-panel",
 		.data = &ws_panel_10_1_data,
 	}, {
-		.compatible = "ies,11.9inch-panel",
+		.compatible = "cus,11.9inch-panel",
 		.data = &ws_panel_11_9_data,
 	}, {
-		.compatible = "ies,4inch-panel",
+		.compatible = "cus,4inch-panel",
 		.data = &ws_panel_4_data,
 	}, {
-		.compatible = "ies,5.0inch-panel",
+		.compatible = "cus,5.0inch-panel",
 		.data = &ws_panel_5_0_data,
 	}, {
-		.compatible = "ies,6.25inch-panel",
+		.compatible = "cus,6.25inch-panel",
 		.data = &ws_panel_6_25_data,
 	}, {
-		.compatible = "ies,8.8inch-panel",
+		.compatible = "cus,8.8inch-panel",
 		.data = &ws_panel_8_8_data,
 	}, {
-		.compatible = "ies,13.3inch-4lane-panel",
+		.compatible = "cus,13.3inch-4lane-panel",
 		.data = &ws_panel_13_3_4lane_data,
 	}, {
-		.compatible = "ies,13.3inch-2lane-panel",
+		.compatible = "cus,13.3inch-2lane-panel",
 		.data = &ws_panel_13_3_2lane_data,
 	}, {
-		.compatible = "ies,7.0inch-h-panel",
+		.compatible = "cus,7.0inch-h-panel",
 		.data = &ws_panel_7_0_h_data,
 	}, {
 		/* sentinel */
@@ -645,5 +629,6 @@ static struct i2c_driver ws_panel_driver = {
 };
 module_i2c_driver(ws_panel_driver);
 
+MODULE_AUTHOR("Dave Stevenson <dave.stevenson@raspberrypi.com>");
 MODULE_DESCRIPTION("Custom DSI panel driver");
 MODULE_LICENSE("GPL");
